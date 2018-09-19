@@ -4,6 +4,7 @@
 #include "caches/lru_variants.h"
 #include "caches/gd_variants.h"
 #include "request.h"
+#define REPORT_INTERVAL 1000000
 
 using namespace std;
 
@@ -47,7 +48,10 @@ int main (int argc, char* argv[])
   long long reqs = 0, hits = 0;
   long long t, id, size;
 
-  cerr << "running..." << endl;
+	// per-REPORT_INTERVAL hits 
+	long hits_interval = 0; 
+
+  cout << "running..." << endl;
 
   infile.open(path);
   SimpleRequest* req = new SimpleRequest(0, 0);
@@ -58,9 +62,18 @@ int main (int argc, char* argv[])
         req->reinit(id,size);
         if(webcache->lookup(req)) {
             hits++;
+		hits_interval++; 
         } else {
             webcache->admit(req);
         }
+
+	if(!(reqs%REPORT_INTERVAL)) {
+		cerr << reqs << " " << hits << " " << double(hits)/reqs << " " 
+		<< double(hits_interval)/REPORT_INTERVAL 
+		<< endl; 
+
+		hits_interval=0; 
+	}
     }
 
   delete req;
